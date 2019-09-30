@@ -4,13 +4,21 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "pretty": "prettier '**/*.{js, json}' --write ",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:coveralls": "jest --coverage --coverageReporters=text-lcov | coveralls"
   },
   "author": "Grayson Orr",
   "license": "MIT",
   "dependencies": {
     "colors": "^1.3.3",
+    "coveralls": "^3.0.6",
     "inquirer": "^6.5.0",
+    "jest": "^24.9.0",
+    "prettier": "^1.18.2",
     "shelljs": "^0.8.3"
   }
 }

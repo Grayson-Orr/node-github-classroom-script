@@ -6,17 +6,38 @@
 
 // Classroom name - otago-polytechnic-bit-courses
 
-const { existsSync, mkdirSync, readFile } = require('fs')
+const { existsSync, readFile } = require('fs')
 const { exec, cp, cd } = require('shelljs')
 const { prompt } = require('inquirer')
+const { createDir, fileDirExists } = require('./helper')
+const { courseCSVFile } = require('./data.json')
 require('colors')
 
 exec('clear')
 
 console.log('GitHub Classroom Script\n'.blue.bold)
-console.log('This script allows teachers to clone/pull student assignments from GitHub Classroom. Teachers can also create branches and send students assignment feedback.\n'.green)
+console.log(
+  "This script allows teachers to clone/pull student assignments from GitHub Classroom. Teachers can also create branches and send student's their assignment feedback.\n"
+    .green
+)
 
-const questions = [
+/**
+ * @param {string} myName
+ * @param {string} myMsg
+ * @param {string} myEmptyMsg
+ */
+const question = (myName, myMsg, myEmptyMsg) => {
+  return {
+    type: 'input',
+    name: myName,
+    message: myMsg,
+    validate: val => {
+      return val !== '' ? true : myEmptyMsg
+    }
+  }
+}
+
+const initialQuestions = [
   {
     type: 'list',
     name: 'gitCommand',
@@ -28,92 +49,103 @@ const questions = [
     name: 'rosterFilePath',
     message: 'Enter a roster file path:',
     validate: val => {
-      return val !== '' ? true
-        : 'Please enter a roster file path. For example, <file path>.csv'
+      return val === ''
+        ? 'CSV filename can not be empty. Please enter a CSV filename. For example, <filename>.csv'
+            .red.bold
+        : !fileDirExists(courseCSVFile, val)
+        ? 'CSV filename does not exist. Please enter a CSV filename. For example, <filename>.csv'
+            .red.bold
+        : true
     }
   },
-  {
-    type: 'input',
-    name: 'classroomName',
-    message: 'Enter a classroom name:',
-    validate: val => {
-      return val !== '' ? true 
-        : 'Please enter a classroom name. For example, otago-polytechnic-bit-courses'
-    }
-  },
-  {
-    type: 'input',
-    name: 'assignmentName',
-    message: 'Enter an assignment name:',
-    validate: val => {
-      return val !== '' ? true
-        : 'Please enter an assignment name. For example, practicals'
-    }
-  }
+  question(
+    'classroomName',
+    'Enter a classroom name:',
+    'Please enter a classroom name. For example, otago-polytechnic-bit-courses'
+      .red.bold
+  ),
+  question(
+    'assignmentName',
+    'Enter an assignment name:',
+    'Please enter an assignment name. For example, practicals'.red.bold
+  )
 ]
 
-const branchQuestion = [
-  {
-    type: 'input',
-    name: 'branchName',
-    message: 'Enter a branch name:',
-    validate: val => {
-      return val !== '' ? true : 'Please enter a branch name.'
-    }
-  }
-]
+const studentFeedbackQuestions = question(
+  'studentFeedbackDir',
+  'Enter a student feedback directory:',
+  'Please enter a student feedback directory.'.red.bold
+)
 
-const studentFeedbackQuestions = [
-  {
-    type: 'input',
-    name: 'studentFeedbackDir',
-    message: 'Enter a student feedback directory:',
-    validate: val => {
-      return val !== '' ? true : 'Please enter a student feedback directory.'
-    }
-  }
-]
+const branchQuestion = question(
+  'branchName',
+  'Enter a branch name:',
+  'Please enter a branch name.'.red.bold
+)
 
-const createDir = myDir => {
-  try {
-    if (!existsSync(myDir)) {
-      console.log('Creating new directory'.green, myDir.blue.bold)
-      mkdirSync(myDir)
-      console.log('Finished creating new directory'.green, myDir.blue.bold)
-    }
-  } catch (err) {
-    console.error(err)
-  }
-}
-
-const copyFile = (myStudentData, myStudentRepoPath, myStudentFeedbackDir,
-  myStudentFeedbackType, myExtension) => {
+/**
+ * @param {*} myStudentData
+ * @param {*} myStudentRepoPath
+ * @param {*} myStudentFeedbackDir
+ * @param {*} myStudentFeedbackType
+ * @param {*} myExtension
+ */
+const copyFile = (
+  myStudentData,
+  myStudentRepoPath,
+  myStudentFeedbackDir,
+  myStudentFeedbackType,
+  myExtension
+) => {
   myStudentData.forEach(s => {
     const studentDir = `${myStudentRepoPath}-${s}`
-    cp(`${myStudentFeedbackDir}/${myStudentFeedbackType}-${s}.${myExtension}`, studentDir)
+    cp(
+      `${myStudentFeedbackDir}/${myStudentFeedbackType}-${s}.${myExtension}`,
+      studentDir
+    )
   })
 }
 
+/**
+ * @param {*} myStudentData
+ * @param {*} myStudentRepoPath
+ * @param {*} myRepoCommand
+ */
 const multipleCommands = (myStudentData, myStudentRepoPath, myRepoCommand) => {
   myStudentData.forEach(s => {
     cd(`${myStudentRepoPath}-${s}`)
     exec(myRepoCommand)
-    cd(__dirname) /** Change to the root directory */ 
+    cd(__dirname) /** Change to the root directory */
   })
 }
 
+/**
+ * @param {*} myAssignmentName
+ * @param {*} myStudentData
+ * @param {*} myRepoCommand
+ */
 const cloneCommand = (myAssignmentName, myStudentData, myRepoCommand) => {
   cd(myAssignmentName)
   myStudentData.forEach(s => {
     existsSync(`${myAssignmentName}-${s}`)
-      ? console.log('Repository'.green, `${myAssignmentName}-${s}`.blue.bold, 'already exists'.green)
-      : console.log('Cloning new repository'.green, `${myAssignmentName}-${s}`.blue.bold)
+      ? console.log(
+          'Repository'.green,
+          `${myAssignmentName}-${s}`.blue.bold,
+          'already exists'.green
+        )
+      : console.log(
+          'Cloning new repository'.green,
+          `${myAssignmentName}-${s}`.blue.bold
+        )
     exec(`${myRepoCommand}${s}.git`)
-    console.log('Finished cloning new repository'.green, `${myAssignmentName}-${s}`.blue.bold)
+    console.log(
+      'Finished cloning new repository'.green,
+      `${myAssignmentName}-${s}`.blue.bold
+    )
   })
 }
 
-prompt(questions).then(answer => {
+prompt(initialQuestions).then(answer => {
   const { gitCommand, rosterFilePath, classroomName, assignmentName } = answer
   readFile(rosterFilePath, (err, data) => {
     const studentData = data
@@ -140,7 +172,13 @@ prompt(questions).then(answer => {
             const { branchName } = bAnswer
             const { studentFeedbackDir } = fbAnswer
             repoCommand = `git checkout -q ${branchName}; git pull origin ${branchName}; git add .; git commit -m "Add student feedback"; git push`
-            copyFile(studentData, studentRepoPath, studentFeedbackDir, 'final-results', 'pdf')
+            copyFile(
+              studentData,
+              studentRepoPath,
+              studentFeedbackDir,
+              'final-results',
+              'pdf'
+            )
             multipleCommands(studentData, studentRepoPath, repoCommand)
           })
         })
