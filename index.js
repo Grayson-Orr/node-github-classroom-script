@@ -1,14 +1,13 @@
 /**
- * @version 1
+ * @version 0.5.0
  * @author [Grayson Orr](https://github.com/grayson-orr)
- * @date 5th August 2019
  */
 
 // Classroom name - otago-polytechnic-bit-courses
 
 const { existsSync, readFile } = require('fs')
 const { exec, cp, cd } = require('shelljs')
-const { prompt } = require('inquirer')
+const { prompt, Separator } = require('inquirer')
 const { createDir, fileDirExists } = require('./helper')
 const { courseCSVFile } = require('./data.json')
 require('colors')
@@ -42,7 +41,15 @@ const initialQuestions = [
     type: 'list',
     name: 'gitCommand',
     message: 'Choose one of the following git commands:',
-    choices: ['clone', 'branch', 'pull', 'student feedback']
+    choices: [
+      'clone',
+      'branch',
+      'log',
+      'pull',
+      'rebase',
+      new Separator(),
+      'student feedback'
+    ]
   },
   {
     type: 'input',

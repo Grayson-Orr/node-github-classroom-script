@@ -1,5 +1,5 @@
 /**
- * @version 1.0
+ * @version 0.5.0
  * @author [Grayson Orr](https://github.com/grayson-orr)
  */
 
