@@ -183,7 +183,7 @@ prompt(initialQuestions).then(answer => {
               studentData,
               studentRepoPath,
               studentFeedbackDir,
-              'final-results',
+              'results',
               'pdf'
             )
             multipleCommands(studentData, studentRepoPath, repoCommand)
