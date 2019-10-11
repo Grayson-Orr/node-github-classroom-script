@@ -5,6 +5,7 @@
 
 // Classroom name - otago-polytechnic-bit-courses
 
+const path = require('path')
 const { existsSync, readFile } = require('fs')
 const { exec, cp, cd } = require('shelljs')
 const { prompt, Separator } = require('inquirer')
@@ -154,7 +155,7 @@ const cloneCommand = (myAssignmentName, myStudentData, myRepoCommand) => {
 
 prompt(initialQuestions).then(answer => {
   const { gitCommand, rosterFilePath, classroomName, assignmentName } = answer
-  readFile(rosterFilePath, (err, data) => {
+  readFile(path.join('csv', rosterFilePath), (err, data) => {
     const studentData = data
       .toString()
       .split('\n')

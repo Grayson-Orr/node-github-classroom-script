@@ -11,3 +11,4 @@ script:
 
 notifications:
   email: false
+  webhooks: https://outlook.office.com/webhook/e92f7d10-697f-4ac5-b1c6-e947e629deb6@450e6824-88ab-4ad2-914d-b0f385da600c/TravisCI/df11ac27099643138d78c9644d052f60/dcd9d052-1f29-470d-bfc8-e8a3ef7cab72
