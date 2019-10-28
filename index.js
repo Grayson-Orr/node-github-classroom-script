@@ -45,9 +45,7 @@ const initialQuestions = [
     choices: [
       'clone',
       'branch',
-      'log',
       'pull',
-      'rebase',
       new Separator(),
       'student feedback'
     ]
@@ -128,9 +126,9 @@ const multipleCommands = (myStudentData, myStudentRepoPath, myRepoCommand) => {
 }
 
 /**
- * @param {*} myAssignmentName
- * @param {*} myStudentData
- * @param {*} myRepoCommand
+ * @param {string} myAssignmentName
+ * @param {object} myStudentData
+ * @param {string} myRepoCommand
  */
 const cloneCommand = (myAssignmentName, myStudentData, myRepoCommand) => {
   cd(myAssignmentName)
@@ -161,20 +159,24 @@ prompt(initialQuestions).then(answer => {
       .split('\n')
       .map(s => s.toLowerCase())
     const studentRepoPath = `${assignmentName}/${assignmentName}`
-    if (err) console.log(err)
-    else {
-      let repoCommand
-      if (gitCommand === 'clone') {
+    switch (gitCommand) {
+      case 'clone':
         createDir(assignmentName)
         repoCommand = `git clone -q https://github.com/${classroomName}/${assignmentName}-`
         cloneCommand(assignmentName, studentData, repoCommand)
-      } else if (gitCommand === 'branch') {
+        break
+      case 'branch':
         prompt(branchQuestion).then(bAnswer => {
           const { branchName } = bAnswer
           repoCommand = `git checkout master; git branch -D ${branchName}; git checkout -q -b ${branchName}; git rm -rf .; git push -f`
           multipleCommands(studentData, studentRepoPath, repoCommand)
         })
-      } else if (gitCommand === 'student feedback') {
+        break
+      case 'pull':
+        repoCommand = 'git checkout -q master; git pull origin master'
+        multipleCommands(studentData, studentRepoPath, repoCommand)
+        break
+      case 'student feedback':
         prompt(branchQuestion).then(bAnswer => {
           prompt(studentFeedbackQuestions).then(fbAnswer => {
             const { branchName } = bAnswer
@@ -190,10 +192,7 @@ prompt(initialQuestions).then(answer => {
             multipleCommands(studentData, studentRepoPath, repoCommand)
           })
         })
-      } else {
-        repoCommand = 'git checkout -q master; git pull origin master'
-        multipleCommands(studentData, studentRepoPath, repoCommand)
-      }
+        break
     }
   })
 })
