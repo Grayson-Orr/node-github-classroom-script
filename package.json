@@ -15,7 +15,7 @@
   "license": "MIT",
   "dependencies": {
     "colors": "^1.4.0",
-    "coveralls": "^3.0.7",
+    "coveralls": "^3.0.11",
     "inquirer": "^7.0.0",
     "jest": "^24.9.0",
     "prettier": "^1.18.2",
