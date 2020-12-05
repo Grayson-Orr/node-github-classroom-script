@@ -1,14 +1,14 @@
 /**
- * @version 1
+ * @version 0.5.0
  * @author [Grayson Orr](https://github.com/grayson-orr)
- * @date 5th August 2019
  */
 
 // Classroom name - otago-polytechnic-bit-courses
 
+const path = require('path')
 const { existsSync, readFile } = require('fs')
 const { exec, cp, cd } = require('shelljs')
-const { prompt } = require('inquirer')
+const { prompt, Separator } = require('inquirer')
 const { createDir, fileDirExists } = require('./helper')
 const { courseCSVFile } = require('./data.json')
 require('colors')
@@ -42,7 +42,13 @@ const initialQuestions = [
     type: 'list',
     name: 'gitCommand',
     message: 'Choose one of the following git commands:',
-    choices: ['clone', 'branch', 'pull', 'student feedback']
+    choices: [
+      'clone',
+      'branch',
+      'pull',
+      new Separator(),
+      'student feedback'
+    ]
   },
   {
     type: 'input',
@@ -120,9 +126,9 @@ const multipleCommands = (myStudentData, myStudentRepoPath, myRepoCommand) => {
 }
 
 /**
- * @param {*} myAssignmentName
- * @param {*} myStudentData
- * @param {*} myRepoCommand
+ * @param {string} myAssignmentName
+ * @param {object} myStudentData
+ * @param {string} myRepoCommand
  */
 const cloneCommand = (myAssignmentName, myStudentData, myRepoCommand) => {
   cd(myAssignmentName)
@@ -147,26 +153,30 @@ const cloneCommand = (myAssignmentName, myStudentData, myRepoCommand) => {
 
 prompt(initialQuestions).then(answer => {
   const { gitCommand, rosterFilePath, classroomName, assignmentName } = answer
-  readFile(rosterFilePath, (err, data) => {
+  readFile(path.join('csv', rosterFilePath), (err, data) => {
     const studentData = data
       .toString()
       .split('\n')
       .map(s => s.toLowerCase())
     const studentRepoPath = `${assignmentName}/${assignmentName}`
-    if (err) console.log(err)
-    else {
-      let repoCommand
-      if (gitCommand === 'clone') {
+    switch (gitCommand) {
+      case 'clone':
         createDir(assignmentName)
         repoCommand = `git clone -q https://github.com/${classroomName}/${assignmentName}-`
         cloneCommand(assignmentName, studentData, repoCommand)
-      } else if (gitCommand === 'branch') {
+        break
+      case 'branch':
         prompt(branchQuestion).then(bAnswer => {
           const { branchName } = bAnswer
           repoCommand = `git checkout master; git branch -D ${branchName}; git checkout -q -b ${branchName}; git rm -rf .; git push -f`
           multipleCommands(studentData, studentRepoPath, repoCommand)
         })
-      } else if (gitCommand === 'student feedback') {
+        break
+      case 'pull':
+        repoCommand = 'git checkout -q master; git pull origin master'
+        multipleCommands(studentData, studentRepoPath, repoCommand)
+        break
+      case 'student feedback':
         prompt(branchQuestion).then(bAnswer => {
           prompt(studentFeedbackQuestions).then(fbAnswer => {
             const { branchName } = bAnswer
@@ -176,16 +186,13 @@ prompt(initialQuestions).then(answer => {
               studentData,
               studentRepoPath,
               studentFeedbackDir,
-              'final-results',
+              'results',
               'pdf'
             )
             multipleCommands(studentData, studentRepoPath, repoCommand)
           })
         })
-      } else {
-        repoCommand = 'git checkout -q master; git pull origin master'
-        multipleCommands(studentData, studentRepoPath, repoCommand)
-      }
+        break
     }
   })
 })
